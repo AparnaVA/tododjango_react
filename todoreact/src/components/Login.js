@@ -2,12 +2,14 @@ import { useState } from "react";
 import Navbar from "./Navbar";
 import axios from "axios";
 import '../Signup.css';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
     var [name, setName] = useState('');
     var [password, setPassword] = useState('');
     var [errorMessage, setErrorMessage] = useState('');
-          function attemptLogin() {
+    const navigate = useNavigate();
+    function attemptLogin() {
         axios.post('http://127.0.0.1:8000/login/',{
             username:name,
             password:password
@@ -18,7 +20,7 @@ function Login() {
             localStorage.setItem('userId', response.data.user_id)
             console.log(response.data.token)
             //redirect to specific users todolist
-            window.location.href = `/todolist/${response.data.user_id}/`;
+            navigate(`/todolist/all/${response.data.user_id}/`);
         }).catch(error=>{
             if(error.response.data.errors){
                 setErrorMessage(Object.values(error.response.data.errors).join(' '))

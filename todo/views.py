@@ -35,16 +35,23 @@ def login(request):
         return Response({'error': 'Invalid Credentials'},
                         status=HTTP_404_NOT_FOUND)
     token, _ = Token.objects.get_or_create(user=user)
-    return Response({'token': token.key},status=HTTP_200_OK)
+    return Response({'token': token.key,'user_id': user.id},status=HTTP_200_OK)
 
 
+# add logout function to delete token for specific User
 @api_view(["POST"])
-@permission_classes((AllowAny,))
+@permission_classes((IsAuthenticated,))
 def logout(request):
-    token = request.auth
-    if token is not None:
+    user = request.user
+    if not user.is_authenticated:
+        return Response({'error': 'Authentication required'}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        token = Token.objects.get(user=user)
         token.delete()
-    return Response(status=HTTP_200_OK)
+        return Response({'message': 'Logged out successfully'}, status=HTTP_200_OK)
+    except Token.DoesNotExist:
+        return Response({'error': 'Token not found'}, status=HTTP_404_NOT_FOUND)
 
 
 #add function to create todolist with name and date input from specific User and save it to db
@@ -76,7 +83,7 @@ def get_todolists(request, user_id):
     if not user.is_authenticated:
         return Response({'error': 'Authentication required'}, status=HTTP_401_UNAUTHORIZED)
 
-    todolists = TodoList.objects.filter(user=user_id).order_by('-date')
+    todolists = TodoList.objects.filter(user_id=user_id).order_by('-date')
     if not todolists:
         return Response({'error': 'No TodoLists found for this user'}, status=HTTP_404_NOT_FOUND)
 
@@ -96,7 +103,7 @@ def get_todolist_by_id(request, user_id, todolist_id):
         return Response({'error': 'Authentication required'}, status=HTTP_401_UNAUTHORIZED)
 
     try:
-        todolist = TodoList.objects.get(id=todolist_id, user_id=user_id)
+        todolist = TodoList.objects.get(id=todolist_id, user_id=user.id)
     except TodoList.DoesNotExist:
         return Response({'error': 'TodoList not found'}, status=HTTP_404_NOT_FOUND)
 
@@ -144,3 +151,21 @@ def delete_todolist(request, todolist_id):
 
     todolist.delete()
     return Response({'message': 'TodoList deleted successfully'}, status=HTTP_200_OK)
+
+#add make as complete for tasks
+@api_view(["PATCH"])
+@permission_classes((IsAuthenticated,))
+def complete_todolist(request, todolist_id):
+    user = request.user
+    if not user.is_authenticated:
+        return Response({'error': 'Authentication required'}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        todolist = TodoList.objects.get(id=todolist_id, user=user)
+    except TodoList.DoesNotExist:
+        return Response({'error': 'TodoList not found'}, status=HTTP_404_NOT_FOUND)
+
+    todolist.completed = True
+    todolist.save()
+
+    return Response({'message': 'TodoList marked as complete'}, status=HTTP_200_OK)

@@ -14,7 +14,7 @@ const router = createBrowserRouter([
 
     { path: 'todolist/create', element: <Create/> },
     { path: 'todolist/all/:userId/', element: <Retrieve/> },
-    { path: 'todolist/:userId/edit/:todolistId/', element: <Edit/> }
+    { path: 'todolist/:userId/edit/:todolistId/', element: <Edit/> },
 
 ]);
 export default router;

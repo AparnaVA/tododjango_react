@@ -12,6 +12,7 @@ function Create() {
     const navigate = useNavigate();
 
     function createTodoList() {
+        const userId = localStorage.getItem('userId');
         const todolist = {
             name: name,
             date: date
@@ -23,16 +24,8 @@ function Create() {
         })
         .then(response => {
             console.log(response.data);
-            //redirect to spxecific user's todolist
             setErrorMessage('');
-            // Assuming the response contains the userId or you can get it from localStorage
-            const userId = response.data.user_id || JSON.parse(localStorage.getItem('user')).id;
-            // Navigate to the user's todolist page
-            localStorage.setItem('userId', userId);
-            localStorage.setItem('todolistId', response.data.id);
-            // Redirect to the user's todolist
-            // You can also use the userId from the response if available
-            navigate(`/todolist/${userId}`);
+            navigate(`/todolist/all/${userId}`);
         })
         .catch(error => {
             console.error(error);

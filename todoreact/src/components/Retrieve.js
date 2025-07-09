@@ -16,9 +16,7 @@ function Retrieve() {
     const [totalPages, setTotalPages] = useState(1);
     const navigate = useNavigate();
     const { userId } = useParams();
-    //get userId from localStorage if not provided in params
-    const storedUserId = localStorage.getItem('userId');
-    const userid = storedUserId || userId;
+    const userid = userId;
 
     useEffect(() => {
         axios.get(`http://localhost:8000/todolist/all/${userid}/`, {
@@ -37,22 +35,26 @@ function Retrieve() {
     }, [userId, currentPage]);
 
     function handleEdit(todolistId) {
-        navigate(`/todolist/${userId}/edit/${todolistId}`);
+        navigate(`/todolist/${userId}/edit/${todolistId}/`);
     }
 
     function handleDelete(todolistId) {
-        axios.delete(`http://localhost:8000/todolist/delete/${todolistId}/`, {
-            headers: {
-                'Authorization': `Token ${localStorage.getItem('token')}`
-            }
-        })
-        .then(response => {
-            setTodolists(todolists.filter(todolist => todolist.id !== todolistId));
-        })
-        .catch(error => {
-            console.error(error);
-            setErrorMessage(error.response.data.error || 'Failed to delete TodoList. Please try again.');
-        });
+        if (window.confirm("Are you sure you want to delete this TodoList?")) {
+            axios.delete(`http://localhost:8000/todolist/${userId}/delete/${todolistId}/`, {
+                headers: {
+                    'Authorization': `Token ${localStorage.getItem('token')}`
+                }
+            })
+            .then(response => {
+                setTodolists(todolists.filter(todolist => todolist.id !== todolistId));
+                navigate(`/todolist/all/${userId}/`);
+                setErrorMessage('');
+            })
+            .catch(error => {
+                console.error(error);
+                setErrorMessage(error.response.data.error || 'Failed to delete TodoList. Please try again.');
+            });
+        }
     }
 
     function handleMarkComplete(todolistId) {
@@ -70,6 +72,8 @@ function Retrieve() {
                 }
                 return todolist;
             }));
+            navigate(`/todolist/all/${userId}/`);
+            setErrorMessage('');
         })
         .catch(error => {
             console.error(error);
@@ -80,7 +84,6 @@ function Retrieve() {
     return (
         <div>
             <Navbar />
-            <h2 className="mt-1">Retrieve TodoLists</h2>
             <div className="container retrieve-todolist">
                 {errorMessage && <div className='alert alert-danger'>{errorMessage}</div>}
                 <ul className="list-group">

@@ -1,10 +1,25 @@
 // add an attractive front page of todo app with signup and login side by side with effects and hover effects
 import React from 'react';
 import './App.css';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 
 
 function App() {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const userId = localStorage.getItem('userId');
+        const token = localStorage.getItem('token');
+
+        if (userId && token) {
+            navigate(`/todolist/all/${userId}/`);
+        } else {
+            navigate('/login');
+        }
+    }, []);
+
     return (
         <div className="container-fluid bg-dark min-vh-100 d-flex align-items-center justify-content-center">
             <div className="text-center">

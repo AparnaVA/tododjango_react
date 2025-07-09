@@ -42,7 +42,7 @@ function Edit() {
         })
         .then(response => {
             console.log(response.data);
-            setErrorMessage('');
+            setErrorMessage(response.data);
             navigate(`/todolist/all/${userId}/`);
         })
         .catch(error => {

@@ -14,7 +14,7 @@ function App() {
         const token = localStorage.getItem('token');
 
         if (userId && token) {
-            navigate(`/todolist/all/${userId}/`);
+            navigate(`/todolist/all/${userId}/all`);
         } else {
             navigate('/login');
         }

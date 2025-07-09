@@ -13,7 +13,7 @@ const router = createBrowserRouter([
     { path: 'login', element: <Login/> },
 
     { path: 'todolist/create', element: <Create/> },
-    { path: 'todolist/all/:userId/', element: <Retrieve/> },
+    { path: 'todolist/all/:userId/:status_type', element: <Retrieve/> },
     { path: 'todolist/:userId/edit/:todolistId/', element: <Edit/> },
 
 ]);

@@ -7,6 +7,8 @@ from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_401_UNAUTHORIZED, HTTP_201_CREATED
 from rest_framework.authtoken.models import Token
+from django.core.paginator import Paginator
+from rest_framework.pagination import PageNumberPagination
 
 from todo.models import TodoList
 from todo.serializers import TodoListSerializer
@@ -73,22 +75,24 @@ def create_todolist(request):
     return Response({'message': 'TodoList created successfully'}, status=HTTP_201_CREATED)
 
 
-#add function to get all todolists for specific User with userid with 5 items per page
-from django.core.paginator import Paginator
-from rest_framework.pagination import PageNumberPagination
+#add function to get all todolists for specific User with userid with 4 items per page
 @api_view(["GET"])
 @permission_classes((IsAuthenticated,))
-def get_todolists(request, user_id):
+def get_todolists(request, user_id, status_type):
     user = request.user
     if not user.is_authenticated:
         return Response({'error': 'Authentication required'}, status=HTTP_401_UNAUTHORIZED)
-
+    # need to filter based on all,pending and complete_todolist
     todolists = TodoList.objects.filter(user_id=user_id).order_by('-date')
+    if status_type == 'pending':
+        todolists = TodoList.objects.filter(user_id=user_id,is_completed=False)
+    elif status_type == 'completed':
+        todolists = TodoList.objects.filter(user_id=user_id,is_completed=True)
     if not todolists:
         return Response({'error': 'No TodoLists found for this user'}, status=HTTP_404_NOT_FOUND)
 
     paginator = PageNumberPagination()
-    paginator.page_size = 5
+    paginator.page_size = 4
     result_page = paginator.paginate_queryset(todolists, request)
     serializer = TodoListSerializer(result_page, many=True)
     return paginator.get_paginated_response(serializer.data)
@@ -161,11 +165,11 @@ def complete_todolist(request, todolist_id):
         return Response({'error': 'Authentication required'}, status=HTTP_401_UNAUTHORIZED)
 
     try:
-        todolist = TodoList.objects.get(id=todolist_id, user=user)
+        todolist = TodoList.objects.get(id=todolist_id, user_id=user.id)
     except TodoList.DoesNotExist:
         return Response({'error': 'TodoList not found'}, status=HTTP_404_NOT_FOUND)
 
-    todolist.completed = True
+    todolist.is_completed = True
     todolist.save()
 
     return Response({'message': 'TodoList marked as complete'}, status=HTTP_200_OK)

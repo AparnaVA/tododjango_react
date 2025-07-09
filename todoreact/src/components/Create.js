@@ -25,7 +25,7 @@ function Create() {
         .then(response => {
             console.log(response.data);
             setErrorMessage('');
-            navigate(`/todolist/all/${userId}`);
+            navigate(`/todolist/all/${userId}/all/`);
         })
         .catch(error => {
             console.error(error);

@@ -43,7 +43,7 @@ function Edit() {
         .then(response => {
             console.log(response.data);
             setErrorMessage(response.data);
-            navigate(`/todolist/all/${userId}/`);
+            navigate(`/todolist/all/${userId}/all/`);
         })
         .catch(error => {
             console.error(error);

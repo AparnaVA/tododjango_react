@@ -43,7 +43,7 @@ function Navbar() {
         <div
         className="collapse navbar-collapse mr-auto"
         id="navbarNav"
-        style={{ float: "left" }}
+        
         >
             <ul className="navbar-nav ml-auto" style={{ color: "#ffffff" }}>
                 <li className="nav-item">
@@ -54,19 +54,19 @@ function Navbar() {
                 
             </ul>
             {userId ? (
-                <ul className="navbar-nav ml-auto" style={{ color: "#ffffff" }}>
+                <ul className="navbar-nav " style={{ color: "#ffffff" }}>
                     <li className="nav-item">
-                        <NavLink to={`/todolist/all/${userId}/`} className="nav-link text-white">
+                        <NavLink to={`/todolist/all/${userId}/all/`} className="nav-link text-white">
                             <b>TodoLists</b>
                         </NavLink>
                     </li>
                     <li className="nav-item">
                         <NavLink to={`/todolist/create/`} className="nav-link text-white">
-                            <b>Create TodoList</b>
+                            <b>Create</b>
                         </NavLink>
                     </li>
                     <li className="nav-item">
-                        <button onClick={logout} className="btn btn-danger">Logout</button>
+                        <button onClick={logout} className="btn text-white">Logout</button>
                     </li>
                 </ul>
             ) : (

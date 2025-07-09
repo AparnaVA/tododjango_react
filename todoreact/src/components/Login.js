@@ -20,7 +20,7 @@ function Login() {
             localStorage.setItem('userId', response.data.user_id)
             console.log(response.data.token)
             //redirect to specific users todolist
-            navigate(`/todolist/all/${response.data.user_id}/`);
+            navigate(`/todolist/all/${response.data.user_id}/all/`);
         }).catch(error=>{
             if(error.response.data.errors){
                 setErrorMessage(Object.values(error.response.data.errors).join(' '))

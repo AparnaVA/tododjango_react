@@ -18,26 +18,31 @@ function Retrieve() {
     const [totalPages, setTotalPages] = useState(1);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [todolistToDelete, setTodolistToDelete] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const navigate = useNavigate();
     const { userId, status_type } = useParams();
     const statusType = status_type || 'all'; // fallback to all
 
     useEffect(() => {
-        axios.get(`http://localhost:8000/todolist/all/${userId}/${statusType}/`, {
-            headers: {
-                'Authorization': `Token ${localStorage.getItem('token')}`
-            }
-        })
-        .then(response => {
-            setTodolists(response.data.results);
-            setTotalPages(response.data.total_pages);
-        })
-        .catch(error => {
-            console.error(error);
-            setErrorMessage(error.response.data.error || 'Failed to retrieve TodoLists. Please try again.');
-        });
-    }, [userId, statusType, currentPage]);
+    axios.get(`http://localhost:8000/todolist/all/${userId}/${statusType}/`, {
+        headers: {
+            'Authorization': `Token ${localStorage.getItem('token')}`
+        },
+        params: {
+            page: currentPage,
+            search: searchTerm
+        }
+    })
+    .then(response => {
+        setTodolists(response.data.results);
+        setTotalPages(response.data.total_pages);
+    })
+    .catch(error => {
+        setErrorMessage("Failed to retrieve TodoLists");
+    });
+}, [userId, statusType, currentPage, searchTerm]);
+
 
     function handleEdit(todolistId) {
         navigate(`/todolist/${userId}/edit/${todolistId}/`);
@@ -97,42 +102,72 @@ function Retrieve() {
             <Navbar />
             <div className="container retrieve-todolist">
                 {errorMessage && <div className='alert alert-danger'><span>{errorMessage}</span></div>}
-                <ul className="list-group">
+                
                     {/* add options for seeing all task,pending tasks,completed tasks in same page*/}
 
-                    <h2 className="mt-1">TodoLists</h2>
+                    <h2 className="text-center">TodoLists</h2>
+                    <div className="row mb-3">
+
+
+    {/* Search Bar */}
+    <input
+    type="text"
+    className="form-control"
+    placeholder="Search TodoLists..."
+    value={searchTerm}
+    onChange={(e) => {
+        setCurrentPage(1); // reset to first page on search
+        setSearchTerm(e.target.value);
+    }}
+/>
+
+
+</div>
+
                     <div className="form-group">
-                        <button className="btn btn-primary" onClick={() => navigate(`/todolist/create/`)}>Create TodoList</button>
-                    </div>
-                    <div className="form-group">
-                        <button className="btn btn-secondary" onClick={() => navigate(`/todolist/all/${userId}/all`)}>All Tasks</button>
-                        <button className="btn btn-secondary" onClick={() => navigate(`/todolist/all/${userId}/pending`)}>Pending Tasks</button>
-                        <button className="btn btn-secondary" onClick={() => navigate(`/todolist/all/${userId}/completed`)}>Completed Tasks</button>
+                        <label htmlFor="statusType" className='mr-4'>Filter by Status:</label>
+                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/all`)}>All Tasks</button>
+                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/pending`)}>Pending Tasks</button>
+                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/completed`)}>Completed Tasks</button>
                     </div>
 
 
                     {/* map through todolists and display them */}
                     <ul className="list-group">
-                        {todolists.map(todolist => (
-                            <li key={todolist.id} className="list-group-item">
-                                {/* make todo item line through if completed */}
-                                <div style={{ textDecoration: todolist.is_completed ? 'line-through' : 'none' }}>
-                                    <h5>{todolist.name}</h5>
-                            </div>
-                                <p>{todolist.date}</p>
-                                <button className="btn btn-warning" onClick={() => handleEdit(todolist.id)}>Edit</button>
-                                <button className="btn btn-danger" onClick={() => handleDelete(todolist.id)}>Delete</button>
-                                <button className="btn btn-success" onClick={() => handleMarkComplete(todolist.id)}>Mark as Complete</button>
-                        </li>
-                    ))}
-                </ul>
-                </ul>
-
-                <div className="pagination">
-                    <button className="btn btn-secondary" onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1}>Previous</button>
-                    <button className="btn btn-secondary" onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages}>Next</button>
+    {todolists.length === 0 ? (
+        <li className="list-group-item">No TodoLists found.</li>
+    ) : (
+        todolists.map(todolist => (
+            <li key={todolist.id} className="list-group-item">
+                <div style={{ textDecoration: todolist.is_completed ? 'line-through' : 'none' }}>
+                    <h5>{todolist.name}</h5>
                 </div>
-            </div>
+                <p>{todolist.date}</p>
+                <button className="btn btn-edit col-2" onClick={() => handleEdit(todolist.id)}>Edit</button>
+                <button className="btn btn-delete col-2" onClick={() => handleDelete(todolist.id)}>Delete</button>
+                <button className="btn btn-complete col-2" onClick={() => handleMarkComplete(todolist.id)}>Complete</button>
+            </li>
+        ))
+    )}
+</ul>
+
+              
+               {/* Pagination */}
+            {totalPages > 0 && (
+                <div className="pagination mt-4">
+                    {Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                            key={index + 1}
+                            className={`badge badge-dark mx-1 px-3 ${currentPage === index + 1 ? 'active' : ''}`}
+                            onClick={() => setCurrentPage(index + 1)}
+                        >
+                            {index + 1}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+            
             <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
     <Modal.Header closeButton>
         <Modal.Title>Confirm Delete</Modal.Title>

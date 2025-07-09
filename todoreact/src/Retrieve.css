@@ -58,3 +58,36 @@
     transition: background-color 0.3s ease;
 }
 
+.btn-filter {
+    color:  #6d2dad;
+    
+}
+
+.btn-filter:hover {
+    color: #8b59f0;
+    outline-style: inset;
+}
+
+.btn-edit{
+    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    color: #ffffff;
+    border: 2px inset #10b981;
+}
+
+.btn-delete{
+    background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    color: #ffffff;
+    border: 2px inset #ef4444;
+}
+
+.btn-complete{
+    background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    color: #ffffff;
+    border: 2px inset #3b82f6;
+}

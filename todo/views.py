@@ -1,3 +1,4 @@
+from numpy import ceil
 from rest_framework import status
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
@@ -82,20 +83,33 @@ def get_todolists(request, user_id, status_type):
     user = request.user
     if not user.is_authenticated:
         return Response({'error': 'Authentication required'}, status=HTTP_401_UNAUTHORIZED)
+    
+    search_query = request.GET.get('search', '')
     # need to filter based on all,pending and complete_todolist
     todolists = TodoList.objects.filter(user_id=user_id).order_by('-date')
     if status_type == 'pending':
-        todolists = TodoList.objects.filter(user_id=user_id,is_completed=False)
+        todolists = todolists.filter(is_completed=False)
     elif status_type == 'completed':
-        todolists = TodoList.objects.filter(user_id=user_id,is_completed=True)
+        todolists = todolists.filter(is_completed=True)
     if not todolists:
         return Response({'error': 'No TodoLists found for this user'}, status=HTTP_404_NOT_FOUND)
+    
+    if search_query:
+        todolists = todolists.filter(name__icontains=search_query)
 
     paginator = PageNumberPagination()
-    paginator.page_size = 4
+    paginator.page_size = 3
     result_page = paginator.paginate_queryset(todolists, request)
     serializer = TodoListSerializer(result_page, many=True)
-    return paginator.get_paginated_response(serializer.data)
+    total_items = todolists.count()
+    total_pages = ceil(total_items / paginator.page_size)
+    return Response({
+        'count': total_items,
+        'total_pages': total_pages,
+        'next': paginator.get_next_link(),
+        'previous': paginator.get_previous_link(),
+        'results': serializer.data
+    })
 
 
 #add function to get todolists for specific User with todolist id

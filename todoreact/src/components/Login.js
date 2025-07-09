@@ -13,7 +13,12 @@ function Login() {
             password:password
         }).then(response=>{
             setErrorMessage('')
+            //add token and userid to local storage
+            localStorage.setItem('token', response.data.token)
+            localStorage.setItem('userId', response.data.user_id)
             console.log(response.data.token)
+            //redirect to specific users todolist
+            window.location.href = `/todolist/${response.data.user_id}/`;
         }).catch(error=>{
             if(error.response.data.errors){
                 setErrorMessage(Object.values(error.response.data.errors).join(' '))

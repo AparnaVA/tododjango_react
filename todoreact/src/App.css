@@ -57,3 +57,7 @@ body {
         transform: translateY(0);
     }
 }
+
+.navbar{
+    background-color: #4b375d;
+}

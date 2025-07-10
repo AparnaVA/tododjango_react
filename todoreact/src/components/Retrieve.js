@@ -22,6 +22,7 @@ function Retrieve() {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [todolistToDelete, setTodolistToDelete] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentImportFormat, setCurrentImportFormat] = useState(''); // Added state for import format
     const location = useLocation();
     const successMessage = location.state?.successMessage;
 
@@ -30,7 +31,7 @@ function Retrieve() {
     const statusType = status_type || 'all'; // fallback to all
 
 
-    useEffect(() => {
+useEffect(() => {
     const successMessage = location.state?.successMessage;
     if (successMessage) {
         setMessage(successMessage);
@@ -106,7 +107,105 @@ useEffect(() => {
     });
     }
 
-    function handleMarkComplete(todolistId, currentStatus) {
+
+    function handleExport(format) {
+    let dataToExport = todolists; // Replace with your actual data
+    let content = '';
+    let filename = `todolist_export.${format}`;
+
+    if (format === 'json') {
+        content = JSON.stringify(dataToExport, null, 2);
+    } else if (format === 'csv') {
+        const headers = Object.keys(dataToExport[0] || {}).join(',');
+        const rows = dataToExport.map(obj => Object.values(obj).join(',')).join('\n');
+        content = `${headers}\n${rows}`;
+    } else if (format === 'plain-text') {
+        content = dataToExport.map(t => `${t.name} - ${t.date}`).join('\n');
+    } else if (format === 'sql') {
+        content = dataToExport.map(t =>
+            `INSERT INTO todolist (name, date, is_completed) VALUES ('${t.name}', '${t.date}', ${t.is_completed});`
+        ).join('\n');
+    }
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
+function handleImport(format) {
+    setCurrentImportFormat(format); // Save selected format to use inside handleFileRead
+    document.getElementById('fileInput').click(); // Trigger file input
+}
+function handleFileRead(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const content = e.target.result;
+        let dataToImport = [];
+        if (currentImportFormat === 'json') {
+            try {
+                dataToImport = JSON.parse(content);
+            } catch (error) {
+                setMessage('Invalid JSON format');
+                setMessageType('danger');
+                return;
+            }
+        } else if (currentImportFormat === 'csv') {
+            const rows = content.split('\n').map(row => row.split(','));
+            const headers = rows[0];
+            dataToImport = rows.slice(1).map(row => {
+                const obj = {};
+                headers.forEach((header, index) => {
+                    obj[header.trim()] = row[index].trim();
+                });
+                return obj;
+            });
+        } else if (currentImportFormat === 'plain-text') {
+            const rows = content.split('\n');
+            dataToImport = rows.map(row => {
+                const [name, date] = row.split(' - ');
+                return { name: name.trim(), date: date.trim(), is_completed: false };
+            });
+        } else if (currentImportFormat === 'sql') {
+            const sqlStatements = content.split(';').map(stmt => stmt.trim()).filter(Boolean);
+            dataToImport = sqlStatements.map(stmt => {
+                const match = stmt.match(/INSERT INTO todolist \(name, date, is_completed\) VALUES \('(.+)', '(.+)', (\d+)\);/);
+                if (match) {
+                    return {
+                        name: match[1],
+                        date: match[2],
+                        is_completed: match[3] === '1'
+                    };
+                }
+                return null;
+            }).filter(Boolean);
+        }
+        // Now send dataToImport to the backend
+        axios.post(`http://localhost:8000/todolist/import/${userId}/`, dataToImport, {
+            headers: {
+                'Authorization': `Token ${localStorage.getItem('token')}`
+            }
+        })
+        .then(response => {
+            setMessage('Import successful');
+            setMessageType('success');
+        })
+        .catch(error => {
+            console.error(error);
+            setMessage(error.response?.data?.error || 'Failed to import tasks.');
+            setMessageType('danger');
+        });
+    };
+    reader.readAsText(file);
+}
+
+function handleMarkComplete(todolistId, currentStatus) {
     const newStatus = !currentStatus;
 
     axios.patch(`http://localhost:8000/todolist/${todolistId}/`, {
@@ -163,17 +262,67 @@ useEffect(() => {
         setSearchTerm(e.target.value);
     }}
 />
+{/* add import and export buttons with drop down options csv,plain text,sql and json */}
 
+<input
+    type="file"
+    id="fileInput"
+    style={{ display: 'none' }}
+    onChange={handleFileRead}
+/>
 
 </div>
 
-                    <div className="form-group">
+                    <div className="form-group d-flex align-items-center flex-wrap gap-3 ms-auto">
                         <label htmlFor="statusType" className='mr-4'>Filter by Status:</label>
-                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/all`)}>All</button>
-                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/pending`)}>Pending</button>
-                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/completed`)}>Completed</button>
-                    </div>
+                        <button className="btn btn-filter mx-2" onClick={() => navigate(`/todolist/all/${userId}/all`)}>All</button>
+                        <button className="btn btn-filter mx-2" onClick={() => navigate(`/todolist/all/${userId}/pending`)}>Pending</button>
+                        <button className="btn btn-filter mx-2" onClick={() => navigate(`/todolist/all/${userId}/completed`)}>Completed</button>
+                    
+                    
+    <div className=" gap-3 d-flex ms-auto">
+  {/* Import Dropdown */}
+  <div className="btn-group">
+    <button
+      className="btn btn-secondary import dropdown-toggle mx-4 ms-auto"
+      type="button"
+      id="importDropdown"
+      data-toggle="dropdown"
+      aria-haspopup="true"
+      aria-expanded="false"
+    >
+      Import
+    </button>
+    <div className="dropdown-menu" aria-labelledby="importDropdown">
+      <button className="dropdown-item" onClick={() => handleImport('csv')}>CSV</button>
+      <button className="dropdown-item" onClick={() => handleImport('plain-text')}>Plain Text</button>
+      <button className="dropdown-item" onClick={() => handleImport('sql')}>SQL</button>
+      <button className="dropdown-item" onClick={() => handleImport('json')}>JSON</button>
+    </div>
+  </div>
 
+  {/* Export Dropdown */}
+  <div className="btn-group">
+    <button
+      className="btn btn-secondary dropdown-toggle export"
+      type="button"
+      id="exportDropdown"
+      data-toggle="dropdown"
+      aria-haspopup="true"
+      aria-expanded="false"
+    >
+      Export
+    </button>
+    <div className="dropdown-menu " aria-labelledby="exportDropdown">
+      <button className="dropdown-item" onClick={() => handleExport('csv')}>CSV</button>
+      <button className="dropdown-item" onClick={() => handleExport('plain-text')}>Plain Text</button>
+      <button className="dropdown-item" onClick={() => handleExport('sql')}>SQL</button>
+      <button className="dropdown-item" onClick={() => handleExport('json')}>JSON</button>
+    </div>
+  </div>
+</div>
+
+</div>
 
                    <ul className="list-group">
   {todolists.length === 0 ? (

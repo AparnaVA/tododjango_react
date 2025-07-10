@@ -16,7 +16,7 @@ function App() {
         if (userId && token) {
             navigate(`/todolist/all/${userId}/all`);
         } else {
-            navigate('/login');
+            navigate('/');
         }
     }, []);
 

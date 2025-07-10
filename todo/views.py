@@ -1,3 +1,4 @@
+import json
 from numpy import ceil
 from rest_framework import status
 from rest_framework.decorators import api_view,permission_classes
@@ -193,3 +194,10 @@ def complete_todolist(request, todolist_id):
 
     status_message = "marked as complete" if completed else "unmarked as complete"
     return Response({'message': f'TodoList {status_message}'}, status=HTTP_200_OK)
+
+
+def import_todolist(request, user_id):
+    data = json.loads(request.body)
+    for item in data:
+        TodoList.objects.create(user_id=user_id, name=item['name'], date=item['date'], is_completed=item.get('is_completed', False))
+    return Response({'status': 'success'})

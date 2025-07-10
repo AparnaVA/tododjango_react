@@ -1,7 +1,7 @@
 /* Retrieve.css */
 
 .container.retrieve-todolist {
-    margin-top: 10px;
+    margin-top: 20px;
     background-color: #f8f9fa;
     padding: 30px;
     border-radius: 10px;
@@ -98,4 +98,30 @@
 .fa-edit{
     transition: color 0.2s;
     color: #f89d0c;
+}
+
+.import{
+    background: linear-gradient(#cdf3cd, #86f48e);
+  color: #131313;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1.08rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #a78bfa33;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.export{
+    background: linear-gradient(#efb6a1, #fca558);
+  color: #101010;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1.08rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #a78bfa33;
+  transition: background 0.2s, transform 0.1s;
 }

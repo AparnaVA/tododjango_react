@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Modal, Button } from "react-bootstrap"; // ✅ Add this
+import '../App.css';
 
 function Navbar() {
     const navigate = useNavigate();
@@ -26,7 +27,7 @@ function Navbar() {
 
     return (
         <>
-            <nav className="navbar navbar-expand-sm navbar-dark bg-dark">
+            <nav className="navbar navbar-expand-sm navbar-dark ">
                 <div className="navbar-brand">
                     <h4>My TO-DO</h4>
                 </div>

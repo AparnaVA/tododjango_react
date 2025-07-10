@@ -9,22 +9,40 @@ import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import '../Retrieve.css';
 import { Modal, Button } from 'react-bootstrap';
+import { useLocation } from 'react-router-dom';
+
 
 
 function Retrieve() {
     const [todolists, setTodolists] = useState([]);
-    const [errorMessage, setErrorMessage] = useState('');
+    const [message, setMessage] = useState('');
+    const [messageType, setMessageType] = useState(''); // 'success' or 'danger'
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [todolistToDelete, setTodolistToDelete] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const location = useLocation();
+    const successMessage = location.state?.successMessage;
 
     const navigate = useNavigate();
     const { userId, status_type } = useParams();
     const statusType = status_type || 'all'; // fallback to all
 
+
     useEffect(() => {
+    const successMessage = location.state?.successMessage;
+    if (successMessage) {
+        setMessage(successMessage);
+        setMessageType('success');
+
+        // Clear the state so it doesn't repeat on future renders
+        window.history.replaceState({}, document.title);
+    }
+}, [location.state]);
+
+    useEffect(() => {
+        
     axios.get(`http://localhost:8000/todolist/all/${userId}/${statusType}/`, {
         headers: {
             'Authorization': `Token ${localStorage.getItem('token')}`
@@ -39,9 +57,22 @@ function Retrieve() {
         setTotalPages(response.data.total_pages);
     })
     .catch(error => {
-        setErrorMessage("Failed to retrieve TodoLists");
+        setMessage("Failed to retrieve TodoLists");
+        setMessageType('danger');
     });
 }, [userId, statusType, currentPage, searchTerm]);
+
+
+useEffect(() => {
+    if (message) {
+        const timer = setTimeout(() => {
+            setMessage('');
+            setMessageType('');
+        }, 2000); // Adjust duration if needed
+
+        return () => clearTimeout(timer); // Cleanup
+    }
+}, [message]);
 
 
     function handleEdit(todolistId) {
@@ -61,52 +92,64 @@ function Retrieve() {
         })
         .then(response => {
             setTodolists(todolists.filter(todolist => todolist.id !== todolistToDelete));
-            setErrorMessage('');
+            setMessage('Task deleted successfully');
+            setMessageType('success');
         })
         .catch(error => {
             console.error(error);
-        setErrorMessage(error.response.data.error || 'Failed to delete TodoList. Please try again.');
-    })
+            setMessage(error.response.data.error || 'Failed to delete TodoList. Please try again.');
+            setMessageType('danger');
+        })
     .finally(() => {
         setShowConfirmModal(false);
         setTodolistToDelete(null);
     });
     }
 
-    function handleMarkComplete(todolistId) {
-        axios.patch(`http://localhost:8000/todolist/${todolistId}/`, {
-            completed: true
-        }, {
-            headers: {
-                'Authorization': `Token ${localStorage.getItem('token')}`
+    function handleMarkComplete(todolistId, currentStatus) {
+    const newStatus = !currentStatus;
+
+    axios.patch(`http://localhost:8000/todolist/${todolistId}/`, {
+        completed: newStatus
+    }, {
+        headers: {
+            'Authorization': `Token ${localStorage.getItem('token')}`
+        }
+    })
+    .then(response => {
+        setTodolists(todolists.map(todolist => {
+            if (todolist.id === todolistId) {
+                return { ...todolist, is_completed: newStatus };
             }
-        })
-        .then(response => {
-            setTodolists(todolists.map(todolist => {
-                if (todolist.id === todolistId) {
-                    return { ...todolist, completed: true };
-                }
-                return todolist;
-            }));
-            navigate(`/todolist/all/${userId}/`);
-            setErrorMessage(response.data.message || 'TodoList marked as complete successfully.');
-        })
-        .catch(error => {
-            console.error(error);
-            setErrorMessage(error.response.data.error || 'Failed to mark TodoList as complete. Please try again.');
-        });
-    }
+            return todolist;
+        }));
+
+        setMessage(newStatus ? 'Task marked as complete.' : 'Task unmarked as complete.');
+        setMessageType('success');
+    })
+    .catch(error => {
+        console.error(error);
+        setMessage(error.response?.data?.error || 'Failed to update task status.');
+        setMessageType('danger');
+    });
+}
+
 
     return (
         <div>
             <Navbar />
             <div className="container retrieve-todolist">
-                {errorMessage && <div className='alert alert-danger'><span>{errorMessage}</span></div>}
-                
+                {message && (
+  <div className={`alert alert-${messageType || 'success'}`}>
+    <span>{message}</span>
+  </div>
+)}
+
+
                     {/* add options for seeing all task,pending tasks,completed tasks in same page*/}
 
                     <h2 className="text-center">TodoLists</h2>
-                    <div className="row mb-3">
+                    <div className="row">
 
 
     {/* Search Bar */}
@@ -126,29 +169,64 @@ function Retrieve() {
 
                     <div className="form-group">
                         <label htmlFor="statusType" className='mr-4'>Filter by Status:</label>
-                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/all`)}>All Tasks</button>
-                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/pending`)}>Pending Tasks</button>
-                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/completed`)}>Completed Tasks</button>
+                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/all`)}>All</button>
+                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/pending`)}>Pending</button>
+                        <button className="btn btn-filter mx-3" onClick={() => navigate(`/todolist/all/${userId}/completed`)}>Completed</button>
                     </div>
 
 
-                    {/* map through todolists and display them */}
-                    <ul className="list-group">
-    {todolists.length === 0 ? (
-        <li className="list-group-item">No TodoLists found.</li>
-    ) : (
-        todolists.map(todolist => (
-            <li key={todolist.id} className="list-group-item">
-                <div style={{ textDecoration: todolist.is_completed ? 'line-through' : 'none' }}>
-                    <h5>{todolist.name}</h5>
-                </div>
-                <p>{todolist.date}</p>
-                <button className="btn btn-edit col-2" onClick={() => handleEdit(todolist.id)}>Edit</button>
-                <button className="btn btn-delete col-2" onClick={() => handleDelete(todolist.id)}>Delete</button>
-                <button className="btn btn-complete col-2" onClick={() => handleMarkComplete(todolist.id)}>Complete</button>
-            </li>
-        ))
-    )}
+                   <ul className="list-group">
+  {todolists.length === 0 ? (
+    <li className="list-group-item text-center py-4">
+      <strong>No TodoLists found.</strong>
+    </li>
+  ) : (
+    todolists.map(todolist => (
+      <li
+        key={todolist.id}
+        className="list-group-item shadow-sm mb-3 rounded"
+        style={{ backgroundColor: "#f8f9fa" }}
+      >
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
+            <h5
+              className={`mb-1 ${
+                todolist.is_completed ? "text-success" : "text-dark"
+              }`}
+              style={{
+                textDecoration: todolist.is_completed ? "line-through" : "none",
+              }}
+            >
+              {todolist.name}
+            </h5>
+            <small className="text-secondary">{todolist.date}</small>
+          </div>
+
+          <div className="d-flex gap-3">
+            <i
+              className="fas fa-edit "
+              title="Edit"
+              onClick={() => handleEdit(todolist.id)}
+              style={{ fontSize: "20px", cursor: "pointer", marginLeft: "15px" }}
+            ></i>
+            <i
+              className="fas fa-trash-alt text-danger"
+              title="Delete"
+              onClick={() => handleDelete(todolist.id)}
+              style={{ fontSize: "20px", cursor: "pointer", marginLeft: "15px" }}
+            ></i>
+            <i
+  className={`fas fa-check-circle ${todolist.is_completed ? "text-success" : "text-muted"}`}
+  title={todolist.is_completed ? "Unmark" : "Mark as Complete"}
+  onClick={() => handleMarkComplete(todolist.id, todolist.is_completed)}
+  style={{ fontSize: "20px", cursor: "pointer", marginLeft: "15px" }}
+></i>
+
+          </div>
+        </div>
+      </li>
+    ))
+  )}
 </ul>
 
               

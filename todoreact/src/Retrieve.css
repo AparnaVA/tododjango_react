@@ -1,7 +1,7 @@
 /* Retrieve.css */
 
 .container.retrieve-todolist {
-    margin-top: 20px;
+    margin-top: 10px;
     background-color: #f8f9fa;
     padding: 30px;
     border-radius: 10px;
@@ -68,26 +68,34 @@
     outline-style: inset;
 }
 
-.btn-edit{
-    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-    color: #ffffff;
-    border: 2px inset #10b981;
+
+.cursor-pointer {
+  cursor: pointer;
 }
 
-.btn-delete{
-    background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-    color: #ffffff;
-    border: 2px inset #ef4444;
+.action-icons i:hover {
+  opacity: 0.7;
 }
 
-.btn-complete{
-    background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-    color: #ffffff;
-    border: 2px inset #3b82f6;
+.fa-edit,
+.fa-trash-alt,
+.fa-check-circle {
+  transition: color 0.2s;
+}
+
+.fa-edit:hover {
+  color: #31feba;
+}
+
+.fa-trash-alt:hover {
+  color: #ef4444;
+}
+
+.fa-check-circle:hover {
+  color: #3b82f6;
+}
+
+.fa-edit{
+    transition: color 0.2s;
+    color: #f89d0c;
 }

@@ -9,8 +9,11 @@ function Edit() {
     const [name, setName] = useState('');
     const [date, setDate] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [message, setMessage] = useState('');
+    const [messageType, setMessageType] = useState(''); // 'success' or 'danger'
     const navigate = useNavigate();
     const { userId, todolistId } = useParams();
+    
 
     useEffect(() => {
         // Fetch the existing TodoList details
@@ -41,25 +44,29 @@ function Edit() {
             }
         })
         .then(response => {
-            console.log(response.data);
-            setErrorMessage(response.data);
-            navigate(`/todolist/all/${userId}/all/`);
+            navigate(`/todolist/all/${userId}/all/`, {
+                state: { successMessage: 'TodoList updated successfully' }
+            });
         })
         .catch(error => {
             console.error(error);
-            setErrorMessage('Failed to update TodoList. Please try again.');
+            setMessage('Failed to update TodoList. Please try again.');
+            setMessageType('danger');
         });
     }
 
     return (
         <div>
             <Navbar />
-            <h2 className="mt-1">Edit TodoList</h2>
-            <div className="container edit-todolist">
+            <div className="container edit-todolist edit-container edit">
                 <div className="row">
                     <div className="col-10 offset-1">
                         <h1 className="mb-5">Edit TodoList</h1>
-                        {errorMessage && <div className='alert alert-danger'>{errorMessage}</div>}
+                        {message && (
+    <div className={`alert alert-${messageType}`} role="alert">
+        {message}
+    </div>
+)}
                         <div className="form-group">
                             <input
                                 className="form-control"
@@ -75,7 +82,7 @@ function Edit() {
                                 value={date}
                                 onChange={(event) => setDate(event.target.value)}
                             />
-                            <button className="btn btn-primary" onClick={updateTodoList}>Update</button>
+                            <button className="btn btn-block btn-primary" onClick={updateTodoList}>Update</button>
                         </div>
                     </div>
                 </div>

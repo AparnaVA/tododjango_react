@@ -1,0 +1,41 @@
+
+.edit
+{
+     margin-top: 50px;
+    margin-bottom: 50px;
+    padding: 20px;
+    border-radius: 5px;
+    background-color: #ffffff;
+    max-width: 600px;
+    font-family: Arial, sans-serif;
+    color: #333;
+    text-align: center;
+    font-size: 16px;
+    line-height: 1.5;
+    box-sizing: border-box;
+    transition: all 0.3s ease; 
+    flex-direction: column;  
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 rgba(80,0,120,0.18), 0 0 0 4px #a78bfa33;
+    width: 800px;  
+    height: 500px;
+}
+
+.form-control {
+    border: 3px inset #730082b9;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 30px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+h1{
+    background: linear-gradient(90deg, #a78bfa, #6d2dad, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-emphasis-color: transparent;
+}
+

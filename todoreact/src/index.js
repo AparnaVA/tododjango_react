@@ -4,6 +4,7 @@ import './index.css';
 import { RouterProvider } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';
 import router from './router';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

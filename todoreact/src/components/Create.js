@@ -25,7 +25,9 @@ function Create() {
         .then(response => {
             console.log(response.data);
             setErrorMessage('');
-            navigate(`/todolist/all/${userId}/all/`);
+            navigate(`/todolist/all/${userId}/all/`, {
+                state: { successMessage: 'Task created successfully' }
+            });
         })
         .catch(error => {
             console.error(error);

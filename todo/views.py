@@ -98,7 +98,7 @@ def get_todolists(request, user_id, status_type):
         todolists = todolists.filter(name__icontains=search_query)
 
     paginator = PageNumberPagination()
-    paginator.page_size = 3
+    paginator.page_size = 4
     result_page = paginator.paginate_queryset(todolists, request)
     serializer = TodoListSerializer(result_page, many=True)
     total_items = todolists.count()
@@ -183,7 +183,13 @@ def complete_todolist(request, todolist_id):
     except TodoList.DoesNotExist:
         return Response({'error': 'TodoList not found'}, status=HTTP_404_NOT_FOUND)
 
-    todolist.is_completed = True
+    # Expecting 'completed' field from frontend
+    completed = request.data.get('completed')
+    if completed is None:
+        return Response({'error': 'Missing "completed" field in request body'}, status=HTTP_400_BAD_REQUEST)
+
+    todolist.is_completed = completed
     todolist.save()
 
-    return Response({'message': 'TodoList marked as complete'}, status=HTTP_200_OK)
+    status_message = "marked as complete" if completed else "unmarked as complete"
+    return Response({'message': f'TodoList {status_message}'}, status=HTTP_200_OK)

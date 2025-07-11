@@ -3,7 +3,7 @@
 .container.retrieve-todolist {
     margin-top: 20px;
     background-color: #f8f9fa;
-    padding: 30px;
+    padding: 20px;
     border-radius: 10px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     /* make responsive */

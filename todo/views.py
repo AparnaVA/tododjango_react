@@ -196,8 +196,18 @@ def complete_todolist(request, todolist_id):
     return Response({'message': f'TodoList {status_message}'}, status=HTTP_200_OK)
 
 
+@api_view(["POST"])
+@permission_classes((IsAuthenticated,))
 def import_todolist(request, user_id):
-    data = json.loads(request.body)
-    for item in data:
-        TodoList.objects.create(user_id=user_id, name=item['name'], date=item['date'], is_completed=item.get('is_completed', False))
-    return Response({'status': 'success'})
+    try:
+        data = request.data  # Automatically parsed by DRF
+        for item in data:
+            TodoList.objects.create(
+                user_id=user_id,
+                name=item['name'],
+                date=item['date'],
+                is_completed=item.get('is_completed', False)
+            )
+        return Response({'status': 'success'}, status=201)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)

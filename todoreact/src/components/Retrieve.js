@@ -45,22 +45,23 @@ useEffect(() => {
     useEffect(() => {
         
     axios.get(`http://localhost:8000/todolist/all/${userId}/${statusType}/`, {
-        headers: {
-            'Authorization': `Token ${localStorage.getItem('token')}`
-        },
-        params: {
-            page: currentPage,
-            search: searchTerm
-        }
-    })
-    .then(response => {
-        setTodolists(response.data.results);
-        setTotalPages(response.data.total_pages);
-    })
-    .catch(error => {
-        setMessage("Failed to retrieve TodoLists");
-        setMessageType('danger');
-    });
+  headers: {
+    'Authorization': `Token ${localStorage.getItem('token')}`
+  },
+  params: {
+    page: currentPage,
+    search: searchTerm
+  }
+})
+.then(response => {
+  setTodolists(response.data.results);
+  setTotalPages(response.data.total_pages);
+})
+.catch(error => {
+  setMessage("Failed to retrieve TodoLists");
+  setMessageType('danger');
+});
+
 }, [userId, statusType, currentPage, searchTerm]);
 
 
@@ -187,15 +188,45 @@ function handleFileRead(event) {
             }).filter(Boolean);
         }
         // Now send dataToImport to the backend
-        axios.post(`http://localhost:8000/todolist/import/${userId}/`, dataToImport, {
+
+
+        const cleanedData = dataToImport.map(item => ({
+  name: item.name,
+  date: item.date,
+  is_completed: item.is_completed === 'true' || item.is_completed === true  // Convert properly
+}));
+
+        console.log("Data being sent for import:", cleanedData);
+        axios.post(`http://localhost:8000/todolist/import/${userId}/`, cleanedData, {
             headers: {
                 'Authorization': `Token ${localStorage.getItem('token')}`
             }
         })
         .then(response => {
-            setMessage('Import successful');
-            setMessageType('success');
-        })
+    setMessage('Import successful');
+    setMessageType('success');
+
+    // Fetch updated list
+    axios.get(`http://localhost:8000/todolist/all/${userId}/${statusType}/`, {
+        headers: {
+            'Authorization': `Token ${localStorage.getItem('token')}`
+        },
+        params: {
+            page: currentPage,
+            search: searchTerm
+        }
+    })
+    .then(res => {
+        setTodolists(res.data.results);
+        setTotalPages(res.data.total_pages);
+    })
+    .catch(err => {
+        console.error(err);
+        setMessage("Failed to retrieve TodoLists after import");
+        setMessageType('danger');
+    });
+})
+
         .catch(error => {
             console.error(error);
             setMessage(error.response?.data?.error || 'Failed to import tasks.');

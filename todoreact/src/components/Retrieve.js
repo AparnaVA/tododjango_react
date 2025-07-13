@@ -291,7 +291,7 @@ function handleMarkComplete(todolistId, currentStatus) {
 
 </div>
 
-                    <div className="form-group d-flex align-items-center flex-wrap gap-3 ms-auto">
+                    <div className="form-group d-flex align-items-center flex-wrap gap-3 ms-auto" style={{ marginTop: '-15px' }} >
                         <label htmlFor="statusType" className='mr-4'>Filter by Status:</label>
                         <button className="btn btn-filter mx-2" onClick={() => navigate(`/todolist/all/${userId}/all`)}>All</button>
                         <button className="btn btn-filter mx-2" onClick={() => navigate(`/todolist/all/${userId}/pending`)}>Pending</button>

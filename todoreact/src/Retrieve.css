@@ -7,7 +7,7 @@
     border-radius: 10px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     /* make responsive */
-    max-width: 1000px;
+    max-width: auto;
     margin-left: auto;
     margin-right: auto;
     overflow: hidden;
@@ -124,4 +124,16 @@
   cursor: pointer;
   box-shadow: 0 2px 8px #a78bfa33;
   transition: background 0.2s, transform 0.1s;
+}
+
+@media only screen and (max-width:500px) {
+  .container.retrieve-todolist {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    /* make responsive */
+    max-width: 470px;
+    overflow: hidden;
+    max-height:min-content;
+}
 }

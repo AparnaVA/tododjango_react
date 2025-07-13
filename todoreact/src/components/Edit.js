@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import Navbar from './Navbar';
 import '../Edit.css';
 
@@ -13,6 +16,14 @@ function Edit() {
     const [messageType, setMessageType] = useState(''); // 'success' or 'danger'
     const navigate = useNavigate();
     const { userId, todolistId } = useParams();
+
+    React.useEffect(() => {
+            const userId = localStorage.getItem('userId');
+            const token = localStorage.getItem('token');
+            if (!userId || !token) {
+                navigate(`/login/`);
+            }
+        }, [navigate]);
     
 
     useEffect(() => {
@@ -28,7 +39,7 @@ function Edit() {
         })
         .catch(error => {
             console.error(error);
-            setErrorMessage('Failed to fetch TodoList details. Please try again.');
+            toast.warning('Failed to fetch TodoList details. Please try again.');
         });
     }, [todolistId]);
 
@@ -50,8 +61,7 @@ function Edit() {
         })
         .catch(error => {
             console.error(error);
-            setMessage('Failed to update TodoList. Please try again.');
-            setMessageType('danger');
+            toast.warning('Failed to update TodoList. Please try again.');
         });
     }
 
@@ -62,11 +72,7 @@ function Edit() {
                 <div className="row">
                     <div className="col-10 offset-1">
                         <h1 className="mb-5">Edit TodoList</h1>
-                        {message && (
-    <div className={`alert alert-${messageType}`} role="alert">
-        {message}
-    </div>
-)}
+                    
                         <div className="form-group">
                             <input
                                 className="form-control"
@@ -87,6 +93,7 @@ function Edit() {
                     </div>
                 </div>
             </div>
+            <ToastContainer position="top-right" autoClose={3000} />
         </div>
     );
 }

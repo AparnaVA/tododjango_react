@@ -9,14 +9,15 @@ import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import '../Retrieve.css';
 import { Modal, Button } from 'react-bootstrap';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useLocation } from 'react-router-dom';
+
 
 
 
 function Retrieve() {
     const [todolists, setTodolists] = useState([]);
-    const [message, setMessage] = useState('');
-    const [messageType, setMessageType] = useState(''); // 'success' or 'danger'
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -24,21 +25,25 @@ function Retrieve() {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentImportFormat, setCurrentImportFormat] = useState(''); // Added state for import format
     const location = useLocation();
-    const successMessage = location.state?.successMessage;
 
     const navigate = useNavigate();
     const { userId, status_type } = useParams();
     const statusType = status_type || 'all'; // fallback to all
 
+    React.useEffect(() => {
+            const userId = localStorage.getItem('userId');
+            const token = localStorage.getItem('token');
+            if (!userId || !token) {
+                navigate(`/login/`);
+            }
+        }, [navigate]);
 
-useEffect(() => {
+        useEffect(() => {
+
     const successMessage = location.state?.successMessage;
     if (successMessage) {
-        setMessage(successMessage);
-        setMessageType('success');
-
-        // Clear the state so it doesn't repeat on future renders
-        window.history.replaceState({}, document.title);
+        toast.success(successMessage); // ✅ Show as toast
+        window.history.replaceState({}, document.title); // Clear state
     }
 }, [location.state]);
 
@@ -58,23 +63,10 @@ useEffect(() => {
   setTotalPages(response.data.total_pages);
 })
 .catch(error => {
-  setMessage("Failed to retrieve TodoLists");
-  setMessageType('danger');
+  toast.danger("Failed to retrieve todolist")
 });
 
 }, [userId, statusType, currentPage, searchTerm]);
-
-
-useEffect(() => {
-    if (message) {
-        const timer = setTimeout(() => {
-            setMessage('');
-            setMessageType('');
-        }, 2000); // Adjust duration if needed
-
-        return () => clearTimeout(timer); // Cleanup
-    }
-}, [message]);
 
 
     function handleEdit(todolistId) {
@@ -94,13 +86,12 @@ useEffect(() => {
         })
         .then(response => {
             setTodolists(todolists.filter(todolist => todolist.id !== todolistToDelete));
-            setMessage('Task deleted successfully');
-            setMessageType('success');
+            toast.success('Task deleted successfully');
+
         })
         .catch(error => {
             console.error(error);
-            setMessage(error.response.data.error || 'Failed to delete TodoList. Please try again.');
-            setMessageType('danger');
+           toast.error(error.response?.data?.error || 'Failed to delete TodoList. Please try again.');
         })
     .finally(() => {
         setShowConfirmModal(false);
@@ -153,8 +144,8 @@ function handleFileRead(event) {
             try {
                 dataToImport = JSON.parse(content);
             } catch (error) {
-                setMessage('Invalid JSON format');
-                setMessageType('danger');
+                toast.danger('Invalid JSON Format');
+
                 return;
             }
         } else if (currentImportFormat === 'csv') {
@@ -203,8 +194,8 @@ function handleFileRead(event) {
             }
         })
         .then(response => {
-    setMessage('Import successful');
-    setMessageType('success');
+    toast.success('Import Successful');
+
 
     // Fetch updated list
     axios.get(`http://localhost:8000/todolist/all/${userId}/${statusType}/`, {
@@ -222,15 +213,15 @@ function handleFileRead(event) {
     })
     .catch(err => {
         console.error(err);
-        setMessage("Failed to retrieve TodoLists after import");
-        setMessageType('danger');
+        toast.warning('Filed to retrieve todo list after import');
+
     });
 })
 
         .catch(error => {
             console.error(error);
-            setMessage(error.response?.data?.error || 'Failed to import tasks.');
-            setMessageType('danger');
+            toast.warning('Filed to import Tasks');
+
         });
     };
     reader.readAsText(file);
@@ -254,13 +245,12 @@ function handleMarkComplete(todolistId, currentStatus) {
             return todolist;
         }));
 
-        setMessage(newStatus ? 'Task marked as complete.' : 'Task unmarked as complete.');
-        setMessageType('success');
+       toast.success(newStatus ? 'Task marked as complete.' : 'Task unmarked as complete.');
+
     })
     .catch(error => {
         console.error(error);
-        setMessage(error.response?.data?.error || 'Failed to update task status.');
-        setMessageType('danger');
+        toast.error(error.response?.data?.error || 'Failed to update Task status. Please try again.');
     });
 }
 
@@ -269,11 +259,7 @@ function handleMarkComplete(todolistId, currentStatus) {
         <div>
             <Navbar />
             <div className="container retrieve-todolist">
-                {message && (
-  <div className={`alert alert-${messageType || 'success'}`}>
-    <span>{message}</span>
-  </div>
-)}
+                
 
 
                     {/* add options for seeing all task,pending tasks,completed tasks in same page*/}
@@ -286,6 +272,7 @@ function handleMarkComplete(todolistId, currentStatus) {
     <input
     type="text"
     className="form-control"
+    style={{"marginLeft":"10px","marginRight":"10px"}}
     placeholder="Search TodoLists..."
     value={searchTerm}
     onChange={(e) => {
@@ -436,6 +423,8 @@ function handleMarkComplete(todolistId, currentStatus) {
         <Button variant="danger" onClick={handleConfirmedDelete}>Delete</Button>
     </Modal.Footer>
 </Modal>
+
+<ToastContainer position="top-right" autoClose={3000} />
 
 
         </div>

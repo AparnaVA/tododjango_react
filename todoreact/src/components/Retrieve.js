@@ -63,7 +63,9 @@ function Retrieve() {
   setTotalPages(response.data.total_pages);
 })
 .catch(error => {
-  toast.danger("Failed to retrieve todolist")
+    if (error.response && error.response.status !== 404) {
+  toast.error("Failed to retrieve todolist")
+    }
 });
 
 }, [userId, statusType, currentPage, searchTerm]);
@@ -144,7 +146,7 @@ function handleFileRead(event) {
             try {
                 dataToImport = JSON.parse(content);
             } catch (error) {
-                toast.danger('Invalid JSON Format');
+                toast.error('Invalid JSON Format');
 
                 return;
             }

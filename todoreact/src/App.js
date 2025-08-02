@@ -12,13 +12,20 @@ function App() {
     useEffect(() => {
         const userId = localStorage.getItem('userId');
         const token = localStorage.getItem('token');
+        const isAdmin = localStorage.getItem('isAdmin') === 'true'; 
 
-        if (userId && token) {
+        if (token) {
+        if (isAdmin) {
+            navigate('/admin-dashboard');
+        } else if (userId) {
             navigate(`/todolist/all/${userId}/all`);
         } else {
             navigate('/');
         }
-    }, []);
+    } else {
+        navigate('/');
+    }
+}, []);
 
     return (
         <div className="container-fluid bg-dark min-vh-100 d-flex align-items-center justify-content-center">

@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import Create from "./components/Create";
 import Retrieve from "./components/Retrieve";
 import Edit from "./components/Edit";
+import AdminDashboard from "./components/AdminDashboard";
 
 
 const router = createBrowserRouter([
@@ -15,6 +16,8 @@ const router = createBrowserRouter([
     { path: 'todolist/create', element: <Create/> },
     { path: 'todolist/all/:userId/:status_type', element: <Retrieve/> },
     { path: 'todolist/:userId/edit/:todolistId/', element: <Edit/> },
+
+    { path: 'admin-dashboard', element:<AdminDashboard/>}
 
 ]);
 export default router;

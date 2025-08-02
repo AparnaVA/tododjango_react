@@ -18,9 +18,15 @@ function Login() {
             //add token and userid to local storage
             localStorage.setItem('token', response.data.token)
             localStorage.setItem('userId', response.data.user_id)
+            localStorage.setItem('isAdmin', response.data.is_admin); // <-- Store admin flag
             console.log(response.data.token)
             //redirect to specific users todolist
-            navigate(`/todolist/all/${response.data.user_id}/all/`);
+            // Redirect based on admin or normal user
+            if (response.data.is_admin) {
+                navigate('/admin-dashboard');  // Admin goes here
+            } else {
+                navigate(`/todolist/all/${response.data.user_id}/all/`);  // Normal user
+            }
         }).catch(error=>{
             if(error.response.data.errors){
                 setErrorMessage(Object.values(error.response.data.errors).join(' '))

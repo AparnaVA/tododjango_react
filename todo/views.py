@@ -11,8 +11,12 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NO
 from rest_framework.authtoken.models import Token
 from django.core.paginator import Paginator
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser
+from django.utils.dateparse import parse_date
+from django.contrib.auth.models import User
+from django.db.models import Count, Sum
 
-from todo.models import TodoList
+from todo.models import TodoList, UserReport
 from todo.serializers import TodoListSerializer
 
 @api_view(['POST'])
@@ -21,6 +25,7 @@ def signup(request):
     form = UserCreationForm(data=request.data)
     if form.is_valid():
         user = form.save()
+        UserReport.objects.get_or_create(user=user)
         return Response("account created successfully", status=status.HTTP_201_CREATED)
     return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -39,7 +44,7 @@ def login(request):
         return Response({'error': 'Invalid Credentials'},
                         status=HTTP_404_NOT_FOUND)
     token, _ = Token.objects.get_or_create(user=user)
-    return Response({'token': token.key,'user_id': user.id},status=HTTP_200_OK)
+    return Response({'token': token.key,'user_id': user.id, 'is_admin':user.is_staff},status=HTTP_200_OK)
 
 
 # add logout function to delete token for specific User
@@ -73,6 +78,11 @@ def create_todolist(request):
         return Response({'error': 'Name and date are required'}, status=HTTP_400_BAD_REQUEST)
     # Create a new TodoList instance
     todolist = TodoList.objects.create(user=user, name=name, date=date)
+    
+    # Update report
+    report, _ = UserReport.objects.get_or_create(user=request.user)
+    report.tasks_created += 1
+    report.save()
 
     return Response({'message': 'TodoList created successfully'}, status=HTTP_201_CREATED)
 
@@ -169,6 +179,11 @@ def delete_todolist(request, todolist_id):
         return Response({'error': 'TodoList not found'}, status=HTTP_404_NOT_FOUND)
 
     todolist.delete()
+    
+     # Update report
+    report, _ = UserReport.objects.get_or_create(user=request.user)
+    report.tasks_deleted += 1
+    report.save()
     return Response({'message': 'TodoList deleted successfully'}, status=HTTP_200_OK)
 
 #add make as complete for tasks
@@ -191,6 +206,10 @@ def complete_todolist(request, todolist_id):
 
     todolist.is_completed = completed
     todolist.save()
+    
+    report, _ = UserReport.objects.get_or_create(user=request.user)
+    report.tasks_completed += 1
+    report.save()
 
     status_message = "marked as complete" if completed else "unmarked as complete"
     return Response({'message': f'TodoList {status_message}'}, status=HTTP_200_OK)
@@ -208,6 +227,66 @@ def import_todolist(request, user_id):
                 date=item['date'],
                 is_completed=item.get('is_completed', False)
             )
+            
+        report, _ = UserReport.objects.get_or_create(user=request.user)
+        report.tasks_imported += 1
+        report.save()
         return Response({'status': 'success'}, status=201)
     except Exception as e:
         return Response({'error': str(e)}, status=400)
+    
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def track_export(request):
+    try:
+        report, _ = UserReport.objects.get_or_create(user=request.user)
+        report.tasks_exported += 1
+        report.save()
+        return Response({'message': 'Export tracked'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
+@api_view(['GET'])
+@permission_classes([IsAdminUser])  # Only admins can access
+def admin_reports(request):
+    
+    # Filter users by date joined (optional date filter)
+    users_qs = User.objects.all()
+    
+    users_by_date = list(users_qs.values('id', 'username', 'date_joined'))
+
+    # Aggregate reports from UserReport table (tracks counts)
+    # Fallback: If you haven't wired counters yet, you can sum from TodoList, but here we'll use UserReport.
+    most_created = list(
+        UserReport.objects.values('user__id', 'user__username')
+        .annotate(total=Sum('tasks_created'))
+        .order_by('-total')[:5]
+    )
+    most_deleted = list(
+        UserReport.objects.values('user__id', 'user__username')
+        .annotate(total=Sum('tasks_deleted'))
+        .order_by('-total')[:5]
+    )
+    most_imported = list(
+        UserReport.objects.values('user__id', 'user__username')
+        .annotate(total=Sum('tasks_imported'))
+        .order_by('-total')[:5]
+    )
+    most_exported = list(
+        UserReport.objects.values('user__id', 'user__username')
+        .annotate(total=Sum('tasks_exported'))
+        .order_by('-total')[:5]
+    )
+
+
+    return Response({
+        "users_by_date": users_by_date,
+        "most_created": most_created,
+        "most_deleted": most_deleted,
+        "most_imported": most_imported,
+        "most_exported": most_exported
+    }, status=status.HTTP_200_OK)
+    

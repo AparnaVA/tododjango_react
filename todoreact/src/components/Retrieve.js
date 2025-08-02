@@ -128,6 +128,19 @@ function Retrieve() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // --- NEW: Track export in Django ---
+    axios.post(`http://localhost:8000/todolist/track-export/`, {}, {
+        headers: {
+            'Authorization': `Token ${localStorage.getItem('token')}`
+        }
+    })
+    .then(() => {
+        console.log("Export tracked successfully");
+    })
+    .catch((err) => {
+        console.error("Failed to track export:", err);
+    });
 }
 
 

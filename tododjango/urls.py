@@ -16,6 +16,9 @@ urlpatterns = [
     path("todolist/delete/<int:todolist_id>/", views.delete_todolist, name="delete_todolist"),
     path("todolist/<int:todolist_id>/", views.complete_todolist, name="retrieve_todolists"),
     path('todolist/import/<int:user_id>/', views.import_todolist),
+    path('todolist/track-export/', views.track_export, name='track_export'),
+    path('reports/', views.admin_reports, name='admin-reports'),
+    
 
     
 ]

@@ -19,6 +19,9 @@ from django.db.models import Count, Sum
 from todo.models import TodoList, UserReport
 from todo.serializers import TodoListSerializer
 
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+
 @api_view(['POST'])
 @permission_classes((AllowAny,))
 def signup(request):
@@ -290,3 +293,7 @@ def admin_reports(request):
         "most_exported": most_exported
     }, status=status.HTTP_200_OK)
     
+def user_tasks(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    tasks = TodoList.objects.filter(user=user).values('id', 'name', 'is_completed', 'date')
+    return JsonResponse(list(tasks), safe=False)

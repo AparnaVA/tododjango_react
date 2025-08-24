@@ -18,6 +18,8 @@ urlpatterns = [
     path('todolist/import/<int:user_id>/', views.import_todolist),
     path('todolist/track-export/', views.track_export, name='track_export'),
     path('reports/', views.admin_reports, name='admin-reports'),
+    path('todolist/user/<int:user_id>', views.user_tasks, name='user_tasks'),
+
     
 
     

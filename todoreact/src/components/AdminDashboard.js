@@ -10,6 +10,10 @@ function AdminDashboard() {
     const [filteredUsers, setFilteredUsers] = useState([]);
     const [filterType, setFilterType] = useState("most_created");
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const usersPerPage = 5;
+
     const fetchReports = async () => {
         try {
             const token = localStorage.getItem("token"); // or wherever you're storing the auth token
@@ -23,6 +27,7 @@ function AdminDashboard() {
             setFilteredUsers(response.data.most_created || []);
             setFilterType("most_created");
             console.log(filteredUsers);
+            setCurrentPage(1);
         } catch (error) {
             console.error("Error fetching admin reports:", error);
         }
@@ -34,11 +39,18 @@ function AdminDashboard() {
         if (type === "most_deleted") setFilteredUsers(reports.most_deleted || []);
         if (type === "most_imported") setFilteredUsers(reports.most_imported || []);
         if (type === "most_exported") setFilteredUsers(reports.most_exported || []);
+        if (type === "by_date") setFilteredUsers(reports.users_by_date || []);
     };
 
     useEffect(() => {
         fetchReports();
     }, []);
+
+     // Pagination calculations
+    const indexOfLastUser = currentPage * usersPerPage;
+    const indexOfFirstUser = indexOfLastUser - usersPerPage;
+    const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+    const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
     return (
         <div>
@@ -49,6 +61,7 @@ function AdminDashboard() {
                 <h4 className="mt-4 text-white">User Task Statistics (All Time)</h4>
 
                 <div className="mb-3">
+                    <button className="btn btn-outline-light me-2" onClick={() => handleFilterChange("by_date")}>By Date Joined</button>
                     <button className="btn btn-outline-light me-2" onClick={() => handleFilterChange("most_created")}>Most Created</button>
                     <button className="btn btn-outline-light me-2" onClick={() => handleFilterChange("most_deleted")}>Most Deleted</button>
                     <button className="btn btn-outline-light me-2" onClick={() => handleFilterChange("most_imported")}>Most Imported</button>
@@ -59,20 +72,24 @@ function AdminDashboard() {
                     <thead>
                         <tr>
                             <th>Username</th>                           
-                            <th>Total task created</th>
+                            {filterType === "by_date" ? <th>Date Joined</th> : <th>Total task created</th>}
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredUsers.map((user, index) => (
+                        {currentUsers.map((user, index) => (
                             <tr key={index}>
                                 <td>{user.user__username || user.username}</td>
-                                <td>{user.total || 1}</td>
-                                <td>
+                                {filterType === "by_date" ? (
+                <td>{user.date_joined ? new Date(user.date_joined).toLocaleDateString() : ""}</td>
+            ) : (
+                <td>{user.total !== undefined ? user.total : 0}</td>
+            )}
+            <td>
                                     <button
                                         className="btn btn-sm btn-primary"
                                         onClick={() =>
-                                            navigate(`/todolist/all/${user.user__id}/all`)
+                                            navigate(`/todolist/user/${user.user__id}`)
                                         }
                                     >
                                         View
@@ -82,6 +99,25 @@ function AdminDashboard() {
                         ))}
                     </tbody>
                 </table>
+
+                {/* Pagination controls */}
+                <nav>
+                    <ul className="pagination">
+                        {Array.from({ length: totalPages }, (_, i) => (
+                            <li
+                                key={i + 1}
+                                className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                            >
+                                <button
+                                    className="page-link"
+                                    onClick={() => setCurrentPage(i + 1)}
+                                >
+                                    {i + 1}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
             </div>
             <ToastContainer position="top-right" autoClose={3000} />
         </div>
